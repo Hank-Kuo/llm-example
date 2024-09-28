@@ -13,7 +13,7 @@ from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langfuse import Langfuse
 
 from config import config
-from document from DOCUMENTS
+from document import DOCUMENTS
 
 llm = AzureChatOpenAI(
     azure_endpoint=config.azure_openai.endpoint,
@@ -24,11 +24,10 @@ llm = AzureChatOpenAI(
     temperature=0,
 )
 
-
 embeddings = AzureOpenAIEmbeddings(
-    model="text-embedding-3-large",
+    model=config.azure_openai.embedding_model,
     dimensions=256,
-    azure_endpoint=config.azure_openai.endpoint
+    azure_endpoint=config.azure_openai.endpoint,
     api_key=config.azure_openai.api_key,
     openai_api_version=config.azure_openai.api_version
 )
@@ -42,3 +41,21 @@ docs = [ Document(page_content=d) for d in DOCUMENTS]
 
 text_splitter = CharacterTextSplitter(chunk_size=20, chunk_overlap=5)
 documents = text_splitter.split_documents(docs)
+
+
+vectordb = FAISS.from_documents(docs, embeddings)
+retriever = vectordb.as_retriever()
+
+
+document_chain = create_stuff_documents_chain(llm, prompt)
+retrieval_chain = create_retrieval_chain(retriever, document_chain)
+
+context = []
+input_text = "有哪些工具可以用？"
+
+response = retrieval_chain.invoke({
+    'input': input_text,
+    'context': context
+})
+print(response['answer'])
+context = response['context']

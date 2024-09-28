@@ -19,10 +19,10 @@ class AzureOpenAIConfig:
 
 
 class Config:
-    """The overall configuration of the api."""
+    host = "localhost"
+    port = 8888
+    workers = 4
     azure_openai= AzureOpenAIConfig()
     langfuse = LangfuseConfig()
 
-
-print(os.getenv('AZURE_OPENAI_ENDPOINT'))
 config = Config()
